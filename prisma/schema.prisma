@@ -204,8 +204,10 @@ model LedgerAccount {
   agentId   String?
   agent     Agent?           @relation(fields: [agentId], references: [id])
   currency  Currency         @default(TTT)
+  // Canonical balance. True double-entry: every transaction debits one account
+  // and credits another, so SUM(balance) across all accounts is invariant.
+  // "Reserved" / "earned" / "spent" views are derived from transaction history.
   balance   Float            @default(0)
-  reserved  Float            @default(0)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 

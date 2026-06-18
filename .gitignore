@@ -41,3 +41,6 @@ next-env.d.ts
 
 # Vercel
 .vercel
+
+# Scratch commit-message files
+_cm.txt
