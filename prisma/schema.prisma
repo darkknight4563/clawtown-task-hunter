@@ -1,0 +1,517 @@
+// Claw Town — Prisma schema
+// Ported from the Base44 entity definitions, plus the LedgerAccount and Stake
+// models that the original skill scripts implied but never exported.
+//
+// Money note: v1 stores amounts as Float for play-money (TTT). A production
+// system handling real value would use Decimal / integer minor-units to avoid
+// floating-point drift. The double-entry invariant (sum of balances constant)
+// is enforced in the settlement service, not the column type.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth.js (NextAuth) models
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  isAdmin       Boolean   @default(false)
+  accounts      Account[]
+  sessions      Session[]
+  agent         Agent?
+  createdAt     DateTime  @default(now())
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Marketplace
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Agent {
+  id                  String      @id @default(cuid())
+  userId              String?     @unique
+  user                User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name                String
+  handle              String      @unique
+  bio                 String?
+  skillTags           String[]    @default([])
+  reputationScore     Float       @default(0)
+  totalTasksCompleted Int         @default(0)
+  totalTasksWon       Int         @default(0)
+  winRate             Float       @default(0)
+  status              AgentStatus @default(active)
+  walletAddress       String?
+  contactChannel      String?
+  contactHandle       String?
+  slackUserId         String?
+  slackDmEnabled      Boolean     @default(false)
+  metadata            Json?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  tasksCreated  Task[]          @relation("TaskCreator")
+  tasksAwarded  Task[]          @relation("TaskAwardee")
+  bids          Bid[]
+  deliverables  Deliverable[]
+  stakes        Stake[]
+  ledgerAccount LedgerAccount[]
+}
+
+model Task {
+  id                   String       @id @default(cuid())
+  title                String
+  description          String?
+  category             TaskCategory @default(other)
+  tags                 String[]     @default([])
+  budget               Float
+  currency             Currency     @default(TTT)
+  status               TaskStatus   @default(open)
+  creatorId            String
+  creator              Agent        @relation("TaskCreator", fields: [creatorId], references: [id])
+  creatorHandle        String?
+  creatorSlackUserId   String?
+  awardedAgentId       String?
+  awardedAgent         Agent?       @relation("TaskAwardee", fields: [awardedAgentId], references: [id])
+  awardedBidId         String?
+  deadline             DateTime?
+  autoBidAttempted     Boolean      @default(false)
+  autoBidAgentId       String?
+  notes                String?
+  isTest               Boolean      @default(false)
+  lastActivityAt       DateTime     @default(now())
+  rescueRemindersSent  Int          @default(0)
+  stalledPingsSent     Int          @default(0)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  bids         Bid[]
+  deliverables Deliverable[]
+  disputes     Dispute[]
+  stakes       Stake[]
+}
+
+model Bid {
+  id          String    @id @default(cuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  agentHandle String?
+  bidAmount   Float
+  currency    Currency  @default(TTT)
+  etaHours    Float?
+  message     String?
+  status      BidStatus @default(pending)
+  isAutoBid   Boolean   @default(false)
+  matchScore  Float?
+  matchReason String?
+  isTest      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Deliverable {
+  id            String            @id @default(cuid())
+  taskId        String
+  task          Task              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bidId         String?
+  agentId       String
+  agent         Agent             @relation(fields: [agentId], references: [id])
+  title         String?
+  description   String?
+  fileUrl       String?
+  externalLink  String?
+  status        DeliverableStatus @default(submitted)
+  reviewerNotes String?
+  submittedAt   DateTime          @default(now())
+  reviewedAt    DateTime?
+  isTest        Boolean           @default(false)
+}
+
+model Dispute {
+  id              String           @id @default(cuid())
+  taskId          String
+  task            Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bidId           String?
+  raisedById      String?
+  raisedByType    DisputePartyType
+  againstId       String?
+  reason          String
+  evidenceUrls    String[]         @default([])
+  status          DisputeStatus    @default(open)
+  resolutionNotes String?
+  resolvedById    String?
+  resolvedAt      DateTime?
+  payoutCreator   Float?
+  payoutAgent     Float?
+  isTest          Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ledger (double-entry)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LedgerAccount {
+  id        String           @id @default(cuid())
+  ownerId   String // an Agent id, or a system owner: "escrow", "escrow_stake", "platform"
+  ownerType AccountOwnerType
+  agentId   String?
+  agent     Agent?           @relation(fields: [agentId], references: [id])
+  currency  Currency         @default(TTT)
+  balance   Float            @default(0)
+  reserved  Float            @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  outgoing LedgerTransaction[] @relation("TxFrom")
+  incoming LedgerTransaction[] @relation("TxTo")
+
+  @@unique([ownerId, currency])
+}
+
+model LedgerTransaction {
+  id             String          @id @default(cuid())
+  fromAccountId  String?
+  fromAccount    LedgerAccount?  @relation("TxFrom", fields: [fromAccountId], references: [id])
+  toAccountId    String?
+  toAccount      LedgerAccount?  @relation("TxTo", fields: [toAccountId], references: [id])
+  amount         Float
+  currency       Currency        @default(TTT)
+  type           LedgerTxType
+  referenceId    String?
+  referenceType  LedgerRefType
+  description    String?
+  status         LedgerTxStatus  @default(completed)
+  idempotencyKey String?         @unique
+  createdAt      DateTime        @default(now())
+
+  @@index([referenceId])
+}
+
+model Stake {
+  id        String      @id @default(cuid())
+  taskId    String
+  task      Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  bidId     String?
+  agentId   String
+  agent     Agent       @relation(fields: [agentId], references: [id])
+  amount    Float
+  currency  Currency    @default(TTT)
+  status    StakeStatus @default(locked)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Platform config, audit, outbox
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlatformSetting {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  value       String
+  valueType   SettingValueType @default(string)
+  description String?
+  category    SettingCategory  @default(general)
+  updatedAt   DateTime         @updatedAt
+}
+
+model AuditLog {
+  id                String       @id @default(cuid())
+  taskId            String?
+  runType           AuditRunType
+  triggeredBy       String
+  summary           String
+  matches           Json?
+  bidsPlaced        Json?
+  bidsSkipped       Json?
+  notificationsSent Json?
+  ledgerActions     Json?
+  errors            Json?
+  status            AuditStatus
+  rawPayload        Json?
+  createdAt         DateTime     @default(now())
+
+  @@index([taskId])
+}
+
+model EventOutbox {
+  id              String       @id @default(cuid())
+  eventType       EventType
+  referenceId     String?
+  referenceType   String?
+  payload         Json?
+  channel         String?
+  recipientId     String?
+  recipientHandle String?
+  message         String?
+  status          OutboxStatus @default(pending)
+  attempts        Int          @default(0)
+  sentAt          DateTime?
+  error           String?
+  metadata        Json?
+  idempotencyKey  String?      @unique
+  isTest          Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AgentStatus {
+  active
+  inactive
+  suspended
+}
+
+enum AccountOwnerType {
+  agent
+  system
+}
+
+enum TaskCategory {
+  development
+  research
+  design
+  automation
+  data
+  content
+  moderation
+  other
+}
+
+enum Currency {
+  TTT
+  USDC
+  ETH
+}
+
+enum TaskStatus {
+  open
+  bidding
+  awarded
+  in_progress
+  delivered
+  completed
+  cancelled
+  disputed
+}
+
+enum BidStatus {
+  pending
+  auto
+  accepted
+  rejected
+  withdrawn
+}
+
+enum DeliverableStatus {
+  submitted
+  approved
+  rejected
+  disputed
+}
+
+enum DisputePartyType {
+  creator
+  agent
+  admin
+}
+
+enum DisputeStatus {
+  open
+  under_review
+  resolved
+  escalated
+}
+
+enum LedgerTxType {
+  escrow_lock
+  escrow_release
+  bid_fee
+  platform_fee
+  refund
+  reward
+  stake_lock
+  stake_release
+  stake_slash
+  payout
+  dispute_split
+  penalty
+}
+
+enum LedgerRefType {
+  task
+  bid
+  dispute
+  stake
+  manual
+}
+
+enum LedgerTxStatus {
+  pending
+  completed
+  failed
+  reversed
+}
+
+enum StakeStatus {
+  locked
+  released
+  slashed
+}
+
+enum SettingValueType {
+  string
+  number
+  boolean
+  json
+}
+
+enum SettingCategory {
+  fees
+  bidding
+  matching
+  notifications
+  safety
+  general
+  slack
+  monitoring
+  kill_switch
+  pulse
+  rescue
+  stalled
+}
+
+enum AuditRunType {
+  task_created
+  bid_placed
+  award_requested
+  award_confirm_started
+  award_confirm_completed
+  award_state_reconciled
+  award_confirmed
+  award_rejected
+  deliverable_submitted
+  deliverable_approved
+  dispute_opened
+  dispute_resolved
+  outbox_dispatch
+  channel_self_heal
+  creator_dm_sent
+  agent_dm_sent
+  slack_connected
+  slack_command
+  market_pulse
+  no_bid_rescue
+  stalled_chase
+  invariant_check
+  manual
+}
+
+enum AuditStatus {
+  ok
+  partial
+  error
+  pending_confirm
+  halted
+  skipped
+}
+
+enum OutboxStatus {
+  pending
+  sent
+  failed
+}
+
+enum EventType {
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_AWARDED
+  TASK_COMPLETED
+  TASK_CANCELLED
+  TASK_STATUS_CHANGED
+  BID_PLACED
+  BID_ACCEPTED
+  BID_REJECTED
+  ESCROW_LOCK
+  STAKE_LOCK
+  STAKE_RELEASE
+  STAKE_SLASH
+  LEDGER_TX
+  PAYOUT
+  REFUND
+  DISPUTE_OPENED
+  DISPUTE_RESOLVED
+  DELIVERABLE_SUBMITTED
+  DELIVERABLE_APPROVED
+  AWARD_CONFIRM_COMPLETED
+  AWARD_STATE_RECONCILED
+  CREATOR_DM
+  AGENT_DM
+  DM_SENT
+  MARKET_PULSE
+  NO_BID_RESCUE
+  NO_BID_RESCUE_SUMMARY
+  STALLED_CHASE
+  STALLED_CHASE_SUMMARY
+  INVARIANT_FAIL
+  AUTOMATION_ERROR
+  DUPLICATE_BID_DETECTED
+  NEGATIVE_BALANCE
+  SUSPICIOUS_ACTIVITY
+  DEAD_LETTER
+  ERROR
+  SYSTEM_ALERT
+  BALANCE_LOW
+  SLACK_COMMAND_REQUEST
+}
