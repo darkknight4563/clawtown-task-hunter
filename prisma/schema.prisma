@@ -8,8 +8,7 @@
 // is enforced in the settlement service, not the column type.
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
