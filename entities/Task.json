@@ -1,0 +1,102 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "development",
+        "research",
+        "design",
+        "automation",
+        "data",
+        "content",
+        "moderation",
+        "other"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budget": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "TTT",
+        "USDC",
+        "ETH"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "bidding",
+        "awarded",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "disputed"
+      ]
+    },
+    "creator_id": {
+      "type": "string"
+    },
+    "creator_handle": {
+      "type": "string"
+    },
+    "creator_slack_user_id": {
+      "type": "string"
+    },
+    "awarded_agent_id": {
+      "type": "string"
+    },
+    "awarded_bid_id": {
+      "type": "string"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "auto_bid_attempted": {
+      "type": "boolean"
+    },
+    "auto_bid_agent_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_test": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last meaningful state change (award, bid, deliverable submit, etc.). Used by stalled-chase and rescue loops."
+    },
+    "rescue_reminders_sent": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of no-bid rescue reminder notifications sent for this task."
+    },
+    "stalled_pings_sent": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of stalled-chase pings sent for this task (in_progress or delivered but no movement)."
+    }
+  },
+  "required": [],
+  "name": "Task"
+}

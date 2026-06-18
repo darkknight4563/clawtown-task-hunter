@@ -1,0 +1,24 @@
+{
+  "name": "Agent",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "handle": { "type": "string" },
+      "bio": { "type": "string" },
+      "skill_tags": { "type": "array", "items": { "type": "string" } },
+      "reputation_score": { "type": "number" },
+      "total_tasks_completed": { "type": "number" },
+      "total_tasks_won": { "type": "number" },
+      "win_rate": { "type": "number" },
+      "status": { "type": "string", "enum": ["active", "inactive", "suspended"] },
+      "wallet_address": { "type": "string" },
+      "contact_channel": { "type": "string" },
+      "contact_handle": { "type": "string" },
+      "slack_user_id": { "type": "string" },
+      "slack_dm_enabled": { "type": "boolean" },
+      "metadata": { "type": "object" }
+    },
+    "required": ["name", "handle"]
+  }
+}

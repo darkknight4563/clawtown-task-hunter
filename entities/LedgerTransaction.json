@@ -1,0 +1,68 @@
+{
+  "type": "object",
+  "properties": {
+    "from_account_id": {
+      "type": "string"
+    },
+    "to_account_id": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "TTT"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "escrow_lock",
+        "escrow_release",
+        "bid_fee",
+        "platform_fee",
+        "refund",
+        "reward",
+        "stake_lock",
+        "stake_release",
+        "stake_slash",
+        "payout",
+        "dispute_split",
+        "penalty"
+      ]
+    },
+    "reference_id": {
+      "type": "string"
+    },
+    "reference_type": {
+      "type": "string",
+      "enum": [
+        "task",
+        "bid",
+        "dispute",
+        "stake",
+        "manual"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed",
+        "reversed"
+      ]
+    }
+  },
+  "required": [
+    "amount",
+    "currency",
+    "type",
+    "reference_type",
+    "status"
+  ],
+  "name": "LedgerTransaction"
+}

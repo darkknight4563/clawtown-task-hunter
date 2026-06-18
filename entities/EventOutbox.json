@@ -1,0 +1,105 @@
+{
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "TASK_CREATED",
+        "TASK_UPDATED",
+        "TASK_AWARDED",
+        "TASK_COMPLETED",
+        "TASK_CANCELLED",
+        "TASK_STATUS_CHANGED",
+        "BID_PLACED",
+        "BID_ACCEPTED",
+        "BID_REJECTED",
+        "ESCROW_LOCK",
+        "STAKE_LOCK",
+        "STAKE_RELEASE",
+        "STAKE_SLASH",
+        "LEDGER_TX",
+        "PAYOUT",
+        "REFUND",
+        "DISPUTE_OPENED",
+        "DISPUTE_RESOLVED",
+        "DELIVERABLE_SUBMITTED",
+        "DELIVERABLE_APPROVED",
+        "AWARD_CONFIRM_COMPLETED",
+        "AWARD_STATE_RECONCILED",
+        "CREATOR_DM",
+        "AGENT_DM",
+        "DM_SENT",
+        "MARKET_PULSE",
+        "NO_BID_RESCUE",
+        "NO_BID_RESCUE_SUMMARY",
+        "STALLED_CHASE",
+        "STALLED_CHASE_SUMMARY",
+        "INVARIANT_FAIL",
+        "AUTOMATION_ERROR",
+        "DUPLICATE_BID_DETECTED",
+        "NEGATIVE_BALANCE",
+        "SUSPICIOUS_ACTIVITY",
+        "DEAD_LETTER",
+        "ERROR",
+        "SYSTEM_ALERT",
+        "BALANCE_LOW",
+        "SLACK_COMMAND_REQUEST"
+      ]
+    },
+    "reference_id": {
+      "type": "string"
+    },
+    "reference_type": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "channel": {
+      "type": "string"
+    },
+    "recipient_id": {
+      "type": "string"
+    },
+    "recipient_handle": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "failed"
+      ]
+    },
+    "attempts": {
+      "type": "number"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "error": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Dedup key for slash command requests and other idempotent events."
+    },
+    "is_test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "event_type",
+    "status"
+  ],
+  "name": "EventOutbox"
+}

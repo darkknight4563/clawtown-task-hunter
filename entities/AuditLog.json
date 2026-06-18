@@ -1,0 +1,99 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "run_type": {
+      "type": "string",
+      "enum": [
+        "task_created",
+        "bid_placed",
+        "award_requested",
+        "award_confirm_started",
+        "award_confirm_completed",
+        "award_state_reconciled",
+        "award_confirmed",
+        "award_rejected",
+        "deliverable_submitted",
+        "deliverable_approved",
+        "dispute_opened",
+        "dispute_resolved",
+        "outbox_dispatch",
+        "channel_self_heal",
+        "creator_dm_sent",
+        "agent_dm_sent",
+        "slack_connected",
+        "slack_command",
+        "market_pulse",
+        "no_bid_rescue",
+        "stalled_chase",
+        "invariant_check",
+        "manual"
+      ]
+    },
+    "triggered_by": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "bids_placed": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "bids_skipped": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "notifications_sent": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "ledger_actions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "partial",
+        "error",
+        "pending_confirm",
+        "halted",
+        "skipped"
+      ]
+    },
+    "raw_payload": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "run_type",
+    "triggered_by",
+    "summary",
+    "status"
+  ],
+  "name": "AuditLog"
+}

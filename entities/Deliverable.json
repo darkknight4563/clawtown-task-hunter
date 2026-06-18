@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "bid_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "external_link": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "approved",
+        "rejected",
+        "disputed"
+      ]
+    },
+    "reviewer_notes": {
+      "type": "string"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [],
+  "name": "Deliverable"
+}

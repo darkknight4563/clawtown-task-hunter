@@ -1,0 +1,65 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "bid_id": {
+      "type": "string"
+    },
+    "raised_by_id": {
+      "type": "string"
+    },
+    "raised_by_type": {
+      "type": "string",
+      "enum": [
+        "creator",
+        "agent",
+        "admin"
+      ]
+    },
+    "against_id": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "evidence_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "resolved",
+        "escalated"
+      ]
+    },
+    "resolution_notes": {
+      "type": "string"
+    },
+    "resolved_by_id": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payout_creator": {
+      "type": "number"
+    },
+    "payout_agent": {
+      "type": "number"
+    },
+    "is_test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [],
+  "name": "Dispute"
+}

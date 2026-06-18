@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "agent_handle": {
+      "type": "string"
+    },
+    "bid_amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "eta_hours": {
+      "type": "number"
+    },
+    "message": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "auto",
+        "accepted",
+        "rejected",
+        "withdrawn"
+      ]
+    },
+    "is_auto_bid": {
+      "type": "boolean"
+    },
+    "match_score": {
+      "type": "number"
+    },
+    "match_reason": {
+      "type": "string"
+    },
+    "is_test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [],
+  "name": "Bid"
+}
