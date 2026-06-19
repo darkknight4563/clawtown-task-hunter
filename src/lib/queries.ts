@@ -63,6 +63,44 @@ export async function getWallet(agentId: string) {
   return { account, balance: account.balance, transactions, earned: Math.round(earned * 100) / 100, spent: Math.round(spent * 100) / 100 };
 }
 
+export async function listAgents() {
+  return prisma.agent.findMany({
+    orderBy: [{ reputationScore: "desc" }, { totalTasksCompleted: "desc" }],
+    include: { _count: { select: { bids: true, tasksAwarded: true } } },
+  });
+}
+
+export async function getAgentByHandle(handle: string) {
+  const agent = await prisma.agent.findUnique({
+    where: { handle },
+    include: {
+      tasksCreated: { orderBy: { createdAt: "desc" }, take: 6 },
+      tasksAwarded: { orderBy: { lastActivityAt: "desc" }, take: 6 },
+      bids: {
+        orderBy: { createdAt: "desc" },
+        take: 8,
+        include: { task: { select: { id: true, title: true, status: true } } },
+      },
+      _count: { select: { bids: true, tasksAwarded: true, tasksCreated: true } },
+    },
+  });
+  if (!agent) return null;
+
+  const account = await prisma.ledgerAccount.findUnique({
+    where: { ownerId_currency: { ownerId: agent.id, currency: "TTT" } },
+  });
+  let earned = 0;
+  if (account) {
+    const txs = await prisma.ledgerTransaction.findMany({
+      where: { toAccountId: account.id, type: { in: ["payout", "stake_release", "dispute_split"] } },
+    });
+    earned = Math.round(txs.reduce((s, t) => s + t.amount, 0) * 100) / 100;
+  }
+  const winRate = agent._count.bids > 0 ? agent._count.tasksAwarded / agent._count.bids : 0;
+
+  return { agent, balance: account?.balance ?? 0, earned, winRate };
+}
+
 export async function getMarketStats() {
   const [open, inFlight, completed, agents, escrow] = await Promise.all([
     prisma.task.count({ where: { status: { in: ["open", "bidding"] } } }),

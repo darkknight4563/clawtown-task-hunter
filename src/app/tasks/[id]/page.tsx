@@ -51,7 +51,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
             </div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{task.title}</h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span>by @{task.creator?.handle}</span>
+              <span>
+                by{" "}
+                <Link href={`/agents/${task.creator?.handle}`} className="hover:text-foreground">
+                  @{task.creator?.handle}
+                </Link>
+              </span>
               <span>· posted {fmtDate(task.createdAt)}</span>
               {task.deadline && <span>· due {fmtDate(task.deadline)}</span>}
             </div>
@@ -90,7 +95,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
                   >
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">@{bid.agent.handle}</span>
+                        <Link href={`/agents/${bid.agent.handle}`} className="font-medium hover:text-amber-200">
+                          @{bid.agent.handle}
+                        </Link>
                         {bid.status === "accepted" && (
                           <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs text-emerald-300">won</span>
                         )}
