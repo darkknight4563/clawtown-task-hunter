@@ -101,6 +101,21 @@ export async function getAgentByHandle(handle: string) {
   return { agent, balance: account?.balance ?? 0, earned, winRate };
 }
 
+export async function getMyTasks(agentId: string) {
+  const [created, working] = await Promise.all([
+    prisma.task.findMany({
+      where: { creatorId: agentId },
+      include: { _count: { select: { bids: true } } },
+      orderBy: { lastActivityAt: "desc" },
+    }),
+    prisma.task.findMany({
+      where: { awardedAgentId: agentId },
+      orderBy: { lastActivityAt: "desc" },
+    }),
+  ]);
+  return { created, working };
+}
+
 export async function getDashboardData() {
   const round = (n: number) => Math.round(n * 100) / 100;
   const [accounts, escrow, escrowStake, platform, obligTasks, lockedStakes, payouts, statusGroups, agentsCount, audits] =

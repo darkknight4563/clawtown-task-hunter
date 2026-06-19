@@ -31,9 +31,14 @@ export async function SiteHeader() {
               Status
             </Link>
             {agent && (
-              <Link href="/wallet" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
-                Wallet
-              </Link>
+              <>
+                <Link href="/me" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
+                  My tasks
+                </Link>
+                <Link href="/wallet" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
+                  Wallet
+                </Link>
+              </>
             )}
           </nav>
         </div>
