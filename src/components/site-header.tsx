@@ -27,6 +27,9 @@ export async function SiteHeader() {
             <Link href="/agents" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
               Hunters
             </Link>
+            <Link href="/dashboard" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
+              Status
+            </Link>
             {agent && (
               <Link href="/wallet" className="rounded-md px-3 py-1.5 transition-colors hover:bg-white/5 hover:text-foreground">
                 Wallet
