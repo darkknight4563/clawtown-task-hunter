@@ -14,7 +14,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:apply": "node --env-file=.env scripts/db-apply.mjs",
-    "db:seed": "node --env-file=.env --import tsx prisma/seed.ts"
+    "db:seed": "node --env-file=.env --import tsx prisma/seed.ts",
+    "db:demo": "node --env-file=.env --import tsx prisma/demo.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
