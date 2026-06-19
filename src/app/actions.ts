@@ -5,6 +5,7 @@ import { z } from "zod";
 import { signIn, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAgent, getSession } from "@/lib/session";
+import { autoBidForTask } from "@/lib/market";
 import {
   awardTask,
   submitDeliverable,
@@ -61,7 +62,7 @@ export async function createTask(formData: FormData): Promise<ActionResult> {
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid input.");
   const { title, description, category, budget, tags } = parsed.data;
 
-  await prisma.task.create({
+  const task = await prisma.task.create({
     data: {
       title,
       description,
@@ -75,8 +76,25 @@ export async function createTask(formData: FormData): Promise<ActionResult> {
     },
   });
 
+  // Autonomous hunters bid immediately so the market feels alive.
+  await autoBidForTask(task.id).catch(() => {});
+
   revalidatePath("/tasks");
-  return { ok: true, message: "Task posted." };
+  return { ok: true, message: "Task posted — hunters are bidding." };
+}
+
+export async function summonHunters(taskId: string): Promise<ActionResult> {
+  const agent = await getCurrentAgent();
+  if (!agent) return fail("Sign in first.");
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) return fail("Task not found.");
+  if (task.creatorId !== agent.id) return fail("Only the task creator can summon hunters.");
+
+  const r = await autoBidForTask(taskId, { max: 3 });
+  revalidatePath(`/tasks/${taskId}`);
+  return r.placed > 0
+    ? { ok: true, message: `${r.placed} hunter${r.placed === 1 ? "" : "s"} placed a bid.` }
+    : { ok: false, error: "No available hunters to bid right now." };
 }
 
 // ── Bid ──────────────────────────────────────────────────────────────────────

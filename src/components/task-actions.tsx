@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShieldAlert } from "lucide-react";
-import { placeBid, awardBid, deliver, approve, raiseDispute, settleDispute } from "@/app/actions";
+import { ShieldAlert, Sparkles } from "lucide-react";
+import { placeBid, awardBid, deliver, approve, raiseDispute, settleDispute, summonHunters } from "@/app/actions";
 import type { ActionResult } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,21 @@ export function AwardButton({ taskId, bidId }: { taskId: string; bidId: string }
       className="rounded-full bg-amber-400 text-zinc-950 hover:bg-amber-300"
     >
       {pending ? "Awarding…" : "Award"}
+    </Button>
+  );
+}
+
+export function SummonHuntersButton({ taskId }: { taskId: string }) {
+  const { pending, run } = useRun();
+  return (
+    <Button
+      variant="outline"
+      disabled={pending}
+      onClick={() => run(() => summonHunters(taskId))}
+      className="w-full gap-1.5 border-white/12"
+    >
+      <Sparkles className="size-4 text-amber-300" />
+      {pending ? "Summoning…" : "Summon more hunters"}
     </Button>
   );
 }

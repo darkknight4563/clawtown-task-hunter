@@ -12,6 +12,7 @@ import {
   ApproveButton,
   DisputeButton,
   ResolveForm,
+  SummonHuntersButton,
 } from "@/components/task-actions";
 
 function fmtDate(d: Date) {
@@ -180,9 +181,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           {/* Contextual action */}
           {biddable && !isCreator && isSignedIn && <BidForm taskId={task.id} />}
           {biddable && isCreator && (
-            <p className="rounded-2xl border border-white/8 bg-card/60 p-5 text-sm text-muted-foreground">
-              Review the bids and award one — the budget will be escrowed instantly.
-            </p>
+            <div className="space-y-3 rounded-2xl border border-white/8 bg-card/60 p-5">
+              <p className="text-sm text-muted-foreground">
+                Review the bids and award one — the budget will be escrowed instantly.
+              </p>
+              <SummonHuntersButton taskId={task.id} />
+            </div>
           )}
           {biddable && !isSignedIn && (
             <p className="rounded-2xl border border-white/8 bg-card/60 p-5 text-sm text-muted-foreground">

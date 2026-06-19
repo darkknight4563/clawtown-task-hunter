@@ -18,11 +18,23 @@ const SETTINGS: {
   { key: "platform_fee_pct", value: "0", valueType: "number", category: "fees", description: "Platform fee percentage (0 in v1)." },
 ];
 
-const AGENTS: { name: string; handle: string; bio: string; skillTags: string[] }[] = [
-  { name: "Nova", handle: "nova", bio: "Generalist product agent. Posts most of the work.", skillTags: ["product", "research"] },
-  { name: "Atlas", handle: "atlas", bio: "Backend & data pipelines.", skillTags: ["development", "data"] },
-  { name: "Sable", handle: "sable", bio: "Design and content.", skillTags: ["design", "content"] },
-  { name: "Orion", handle: "orion", bio: "Automation and ops.", skillTags: ["automation", "moderation"] },
+const AGENTS: {
+  name: string;
+  handle: string;
+  bio: string;
+  skillTags: string[];
+  reputationScore?: number;
+  totalTasksCompleted?: number;
+}[] = [
+  { name: "Nova", handle: "nova", bio: "Generalist product agent. Posts most of the work.", skillTags: ["product", "research"], reputationScore: 4.6, totalTasksCompleted: 12 },
+  { name: "Atlas", handle: "atlas", bio: "Backend & data pipelines. Python, SQL, ETL.", skillTags: ["development", "data", "python", "etl"], reputationScore: 4.9, totalTasksCompleted: 31 },
+  { name: "Sable", handle: "sable", bio: "Brand, UI and landing pages.", skillTags: ["design", "content", "figma", "landing"], reputationScore: 4.7, totalTasksCompleted: 22 },
+  { name: "Orion", handle: "orion", bio: "Automation, scrapers and ops glue.", skillTags: ["automation", "moderation"], reputationScore: 4.4, totalTasksCompleted: 18 },
+  { name: "Byte", handle: "byte", bio: "Full-stack dev. TypeScript, APIs, infra.", skillTags: ["development", "automation", "typescript"], reputationScore: 4.8, totalTasksCompleted: 27 },
+  { name: "Quill", handle: "quill", bio: "Research and long-form content.", skillTags: ["research", "content"], reputationScore: 4.5, totalTasksCompleted: 15 },
+  { name: "Pixel", handle: "pixel", bio: "Product design and motion.", skillTags: ["design", "content", "figma"], reputationScore: 4.3, totalTasksCompleted: 9 },
+  { name: "Vault", handle: "vault", bio: "Data engineering and analytics.", skillTags: ["data", "development", "etl"], reputationScore: 4.9, totalTasksCompleted: 24 },
+  { name: "Echo", handle: "echo", bio: "Trust & safety, moderation tooling.", skillTags: ["moderation", "research"], reputationScore: 4.2, totalTasksCompleted: 7 },
 ];
 
 async function main() {
@@ -49,8 +61,22 @@ async function main() {
   for (const a of AGENTS) {
     const agent = await prisma.agent.upsert({
       where: { handle: a.handle },
-      update: { name: a.name, bio: a.bio, skillTags: a.skillTags },
-      create: { name: a.name, handle: a.handle, bio: a.bio, skillTags: a.skillTags, status: "active" },
+      update: {
+        name: a.name,
+        bio: a.bio,
+        skillTags: a.skillTags,
+        reputationScore: a.reputationScore ?? 0,
+        totalTasksCompleted: a.totalTasksCompleted ?? 0,
+      },
+      create: {
+        name: a.name,
+        handle: a.handle,
+        bio: a.bio,
+        skillTags: a.skillTags,
+        status: "active",
+        reputationScore: a.reputationScore ?? 0,
+        totalTasksCompleted: a.totalTasksCompleted ?? 0,
+      },
     });
     agents[a.handle] = agent.id;
     await prisma.ledgerAccount.upsert({
