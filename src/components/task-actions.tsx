@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ShieldAlert, Sparkles } from "lucide-react";
-import { placeBid, awardBid, deliver, approve, raiseDispute, settleDispute, summonHunters } from "@/app/actions";
+import { ShieldAlert, Sparkles, Bot } from "lucide-react";
+import { placeBid, awardBid, deliver, approve, raiseDispute, settleDispute, summonHunters, runAgentDelivery } from "@/app/actions";
 import type { ActionResult } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,20 @@ export function AwardButton({ taskId, bidId }: { taskId: string; bidId: string }
       className="rounded-full bg-amber-400 text-zinc-950 hover:bg-amber-300"
     >
       {pending ? "Awarding…" : "Award"}
+    </Button>
+  );
+}
+
+export function AiDeliverButton({ taskId }: { taskId: string }) {
+  const { pending, run } = useRun();
+  return (
+    <Button
+      disabled={pending}
+      onClick={() => run(() => runAgentDelivery(taskId))}
+      className="w-full gap-1.5 bg-violet-500 text-violet-50 hover:bg-violet-400"
+    >
+      <Bot className="size-4" />
+      {pending ? "Agent working…" : "Have the agent do it (AI)"}
     </Button>
   );
 }

@@ -13,6 +13,7 @@ import {
   DisputeButton,
   ResolveForm,
   SummonHuntersButton,
+  AiDeliverButton,
 } from "@/components/task-actions";
 
 function fmtDate(d: Date) {
@@ -34,6 +35,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const stake = task.stakes[0]?.amount ?? (bidAmount ? Math.round(bidAmount * 10) / 100 : null);
   const refund = bidAmount != null ? Math.round((task.budget - bidAmount) * 100) / 100 : null;
   const biddable = ["open", "bidding"].includes(task.status);
+  const awardeeAutonomous = task.awardedAgent ? task.awardedAgent.userId === null : false;
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
@@ -133,7 +135,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
                       <span className="font-medium">{d.title || "Deliverable"}</span>
                       <span className="text-xs capitalize text-muted-foreground">{d.status}</span>
                     </div>
-                    {d.description && <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>}
+                    {d.description && (
+                      <p className="mt-2 max-h-96 overflow-y-auto whitespace-pre-wrap text-sm text-foreground/80">
+                        {d.description}
+                      </p>
+                    )}
                     {d.externalLink && (
                       <a href={d.externalLink} target="_blank" rel="noreferrer" className="mt-1 inline-block text-sm text-amber-300 hover:underline">
                         {d.externalLink}
@@ -204,7 +210,15 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           {task.status === "awarded" && isAwardedAgent && <DeliverForm taskId={task.id} />}
           {(task.status === "awarded" || task.status === "delivered") && isCreator && (
             <div className="space-y-2 rounded-2xl border border-white/8 bg-card/60 p-5">
-              {task.status === "awarded" && (
+              {task.status === "awarded" && awardeeAutonomous && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    @{task.awardedAgent?.handle} is an autonomous hunter — have it complete the work now.
+                  </p>
+                  <AiDeliverButton taskId={task.id} />
+                </>
+              )}
+              {task.status === "awarded" && !awardeeAutonomous && (
                 <p className="text-sm text-muted-foreground">Waiting on the agent to deliver. You can approve early or dispute.</p>
               )}
               <ApproveButton taskId={task.id} />

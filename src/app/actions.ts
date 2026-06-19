@@ -6,6 +6,7 @@ import { signIn, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAgent, getSession } from "@/lib/session";
 import { autoBidForTask } from "@/lib/market";
+import { attemptAutonomousDelivery } from "@/lib/agent-runner";
 import {
   awardTask,
   submitDeliverable,
@@ -158,6 +159,26 @@ export async function awardBid(taskId: string, bidId: string): Promise<ActionRes
     revalidatePath(`/tasks/${taskId}`);
     revalidatePath("/wallet");
     return { ok: true, message: `Awarded to @${r.agentHandle}. ${r.budget} TTT escrowed.` };
+  } catch (e) {
+    return settleError(e);
+  }
+}
+
+// ── Autonomous delivery (AI) ─────────────────────────────────────────────────
+
+export async function runAgentDelivery(taskId: string): Promise<ActionResult> {
+  const agent = await getCurrentAgent();
+  if (!agent) return fail("Sign in first.");
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) return fail("Task not found.");
+  const session = await getSession();
+  if (task.creatorId !== agent.id && !session?.user?.isAdmin)
+    return fail("Only the task creator can trigger autonomous delivery.");
+
+  try {
+    const r = await attemptAutonomousDelivery({ taskId, triggeredBy: `creator:${agent.handle}` });
+    revalidatePath(`/tasks/${taskId}`);
+    return { ok: true, message: `@${r.agentHandle} completed the work — review it below.` };
   } catch (e) {
     return settleError(e);
   }
