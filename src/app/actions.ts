@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAgent, getSession } from "@/lib/session";
 import { autoBidForTask } from "@/lib/market";
 import { attemptAutonomousDelivery } from "@/lib/agent-runner";
+import { notifyChannel } from "@/lib/slack";
 import {
   awardTask,
   submitDeliverable,
@@ -156,6 +157,7 @@ export async function awardBid(taskId: string, bidId: string): Promise<ActionRes
 
   try {
     const r = await awardTask({ taskId, bidId, triggeredBy: `agent:${agent.handle}` });
+    await notifyChannel(`🏆 *${task.title}* awarded to @${r.agentHandle} — ${r.budget} TTT escrowed.`).catch(() => {});
     revalidatePath(`/tasks/${taskId}`);
     revalidatePath("/wallet");
     return { ok: true, message: `Awarded to @${r.agentHandle}. ${r.budget} TTT escrowed.` };
@@ -218,6 +220,7 @@ export async function approve(taskId: string): Promise<ActionResult> {
 
   try {
     const r = await approveDeliverable({ taskId, triggeredBy: `agent:${agent.handle}` });
+    await notifyChannel(`✅ *${task.title}* completed — @${r.agentHandle} paid ${r.payout} ${r.currency}.`).catch(() => {});
     revalidatePath(`/tasks/${taskId}`);
     revalidatePath("/wallet");
     return { ok: true, message: `Approved. @${r.agentHandle} paid ${r.payout} TTT.` };
@@ -249,6 +252,7 @@ export async function raiseDispute(taskId: string, formData: FormData): Promise<
       reason,
       triggeredBy: `agent:${agent.handle}`,
     });
+    await notifyChannel(`⚠️ Dispute opened on *${task.title}* — funds frozen pending resolution.`).catch(() => {});
     revalidatePath(`/tasks/${taskId}`);
     return { ok: true, message: "Dispute opened. Funds are frozen pending resolution." };
   } catch (e) {
