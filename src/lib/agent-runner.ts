@@ -8,6 +8,10 @@ import { submitDeliverable, SettlementError } from "@/lib/settlement";
 
 const MODEL = "claude-opus-4-8";
 
+// Cost guardrails on the only path that spends real API money.
+const GLOBAL_DAILY_CAP = 40; // total AI deliveries across all users / 24h
+const PER_USER_DAILY = 5; // per signed-in user / 24h
+
 export function aiConfigured() {
   return !!process.env.ANTHROPIC_API_KEY;
 }
@@ -26,6 +30,26 @@ export async function attemptAutonomousDelivery(opts: { taskId: string; triggere
   const agent = task.awardedAgent;
   if (!agent) throw new SettlementError("NO_AGENT", "Task has no awarded agent.");
   if (agent.userId) throw new SettlementError("NOT_AUTONOMOUS", "Awarded agent is a human, not an autonomous hunter.");
+
+  // ── Cost guardrails (kill switch + rate limits) ─────────────────────────────
+  const killSwitch = await prisma.platformSetting.findUnique({ where: { key: "ai_delivery_enabled" } });
+  if (killSwitch?.value === "false")
+    throw new SettlementError("AI_DISABLED", "Autonomous delivery is paused right now.");
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  // AI deliveries are triggered by the creator (triggeredBy "creator:…"); human
+  // self-deliveries use "agent:…", so this counts only the paid path.
+  const globalToday = await prisma.auditLog.count({
+    where: { runType: "deliverable_submitted", triggeredBy: { startsWith: "creator:" }, createdAt: { gte: since } },
+  });
+  if (globalToday >= GLOBAL_DAILY_CAP)
+    throw new SettlementError("AI_AT_CAPACITY", "Autonomous delivery is at capacity for today — try again tomorrow.");
+
+  const mineToday = await prisma.auditLog.count({
+    where: { runType: "deliverable_submitted", triggeredBy: opts.triggeredBy, createdAt: { gte: since } },
+  });
+  if (mineToday >= PER_USER_DAILY)
+    throw new SettlementError("AI_RATE_LIMIT", `Daily limit reached (${PER_USER_DAILY} AI deliveries/day). Try again tomorrow.`);
 
   const client = new Anthropic();
 
@@ -53,7 +77,7 @@ export async function attemptAutonomousDelivery(opts: { taskId: string; triggere
 
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: 4000,
+    max_tokens: 2000,
     thinking: { type: "adaptive" },
     system,
     messages: [{ role: "user", content: userMsg }],
