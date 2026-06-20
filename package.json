@@ -15,7 +15,9 @@
     "db:deploy": "prisma migrate deploy",
     "db:apply": "node --env-file=.env scripts/db-apply.mjs",
     "db:seed": "node --env-file=.env --import tsx prisma/seed.ts",
-    "db:demo": "node --env-file=.env --import tsx prisma/demo.ts"
+    "db:demo": "node --env-file=.env --import tsx prisma/demo.ts",
+    "ai:pause": "node --env-file=.env --import tsx scripts/ai-toggle.ts off",
+    "ai:resume": "node --env-file=.env --import tsx scripts/ai-toggle.ts on"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
